@@ -57,11 +57,11 @@ function festiveGreeting($now) {
 		case 509:
 			$greeting = "🇬🇬 Happy Liberation Day 🇯🇪";
 			break;
-		case date('nd', strtotime('third monday of may')):
+		case date('nd', strtotime('third monday of may',$date)):
 			$greeting = "🇰🇾 Happy Discovery Day 🇰🇾";
 			if ($date == 521) $greeting .= " <br />🇸🇭 Happy St Helena’s Day 🇸🇭"; //in case of clash
 			break;
-		case date('nd', strtotime('last monday of may')) - 3: //Friday before last Monday in May
+		case date('nd', strtotime('last monday of may',$date)) - 3: //Friday before last Monday in May
 			$greeting = "🇧🇲 Happy Bermuda Day 🇧🇲";
 			if ($date == 521) $greeting .= " <br />🇸🇭 Happy St Helena’s Day 🇸🇭"; //in case of clash
 			break;
