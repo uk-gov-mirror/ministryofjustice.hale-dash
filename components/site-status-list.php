@@ -7,7 +7,10 @@ $environments = [
 
 $dashboard_ID = "59";
 
-if ($this_env == "Local") {
+$marc_user_ids = [34,3947];
+$dev_user_ids = [2,26,49,3907,4244];
+
+if ($this_env == "Local" || in_array($current_user_id,$dev_user_ids)) {
 	$environments[] = "local";
 }
 
@@ -102,8 +105,6 @@ ob_start();
 foreach ($sites as $site) {
 	$current_user_logged_in = false;
 	$marc_logged_in = false;
-	$marc_user_ids = [34,3947];
-	$dev_user_ids = [2,26,49,3907,4244];
 	$login_suffix = "hale-wpms-2020";
 	$site_id = $site->blog_id;
 	$site_url = get_site_url($site_id);
