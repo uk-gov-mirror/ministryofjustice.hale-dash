@@ -1,4 +1,25 @@
 @charset "UTF-8";
+
+// The parent hale theme bundles Font Awesome's base + icon CSS and copies the
+// webfont files, but its icons.scss only imports the Brands @font-face — the
+// Solid face is never declared, so solid icons never load. Declare it here
+// (pointing at the solid webfont copied into this theme) and make the family
+// classes resolve to it.
+@font-face {
+	font-family: "Font Awesome 6 Free";
+	font-style: normal;
+	font-weight: 900;
+	font-display: block;
+	src: url(../webfonts/fa-solid-900.woff2) format("woff2"),
+		url(../webfonts/fa-solid-900.ttf) format("truetype");
+}
+
+.fa-solid,
+.fas {
+	font-family: "Font Awesome 6 Free";
+	font-weight: 900;
+}
+
 .govuk-main-wrapper .govuk-grid-column-full {
 	padding: 0 15px;
 	box-sizing: border-box;
@@ -362,12 +383,256 @@
 	align-items: center !important;
 }
 
+// govuk gives the logo a fixed one-third width (and a matching min-width),
+// which pushes the header nav into the middle of the bar. Collapse both so the
+// logo shrinks to the title's own width and the nav sits directly beside it.
+.hale-page .govuk-header__logo {
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	flex: 0 0 auto !important;
+}
+
 .hale-page .govuk-header__logotype-text,
 .hale-page .hale-header__logotype-text--custom {
 	font-size: 1rem !important;
 	line-height: 1 !important;
 	margin: 0 !important;
 	padding: 0 !important;
+	// No underline on the title in any state (overrides govuk's hover border).
+	text-decoration: none !important;
+	border-bottom: 0 !important;
+}
+
+// govuk lifts the logotype up 3px (position: relative; top: -3px), leaving the
+// title sitting higher than the centred header nav. Neutralise it so the title
+// text and the "Demo sites" link centre on the same line.
+.hale-page .govuk-header__logotype {
+	position: static !important;
+	top: auto !important;
+}
+
+// The title is an <h1> inside the homepage link — govuk underlines that link on
+// hover (text-decoration) and adds a border on hover/active. Kill both across
+// every state so the title never shows an underline.
+.hale-page .govuk-header__link--homepage,
+.hale-page .govuk-header__link--homepage:link,
+.hale-page .govuk-header__link--homepage:visited,
+.hale-page .govuk-header__link--homepage:hover,
+.hale-page .govuk-header__link--homepage:active,
+.hale-page .govuk-header__link--homepage:focus {
+	text-decoration: none !important;
+	border-bottom: 0 !important;
+}
+
+// -------------------------------------------------------------
+// Demo site reservations
+// -------------------------------------------------------------
+// Shown on every environment except prod — reservations there are local only.
+.hale-dash-env-notice {
+	padding: 0.5rem 0.75rem;
+	margin-bottom: 1.5rem;
+	border-left: 5px solid #f47738;
+	background-color: var(--hd-bg-subtle);
+	color: var(--hd-fg);
+}
+
+.hale-dash-reserved-box {
+	padding: 0.75rem 1rem;
+	margin-bottom: 1.5rem;
+	border: 1px solid var(--hd-border);
+	border-radius: 4px;
+	background-color: var(--hd-bg-subtle);
+
+	h3 {
+		margin-top: 0;
+	}
+
+	&__icon {
+		margin-right: 0.35rem;
+		color: var(--hd-fg-muted);
+	}
+
+	// Shown when the demo endpoint could not be reached. Sits on the box's own
+	// background rather than the subtle one behind it, so it reads as an alert
+	// rather than as part of the list.
+	&__warning {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		padding: 0.5rem 0.6rem;
+		margin: 0 0 0.75rem;
+		border-left: 4px solid #f47738;
+		background-color: var(--hd-bg);
+		color: var(--hd-fg-muted);
+	}
+
+	&__list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	// One reservation per row, stacked to fit the narrow column: bold site name
+	// then a muted "who · dates" line beneath.
+	&__item {
+		margin: 0;
+		padding: 0.4rem 0;
+		border-bottom: 1px solid var(--hd-border);
+
+		&:last-child {
+			border-bottom: 0;
+			padding-bottom: 0;
+		}
+
+		&:first-child {
+			padding-top: 0;
+		}
+	}
+
+	&__site {
+		display: block;
+		font-weight: 700;
+	}
+
+	&__who,
+	&__dates {
+		color: var(--hd-fg-muted);
+	}
+
+	&__who::after {
+		content: " ·";
+	}
+}
+
+.hale-dash-reserve {
+	display: flex;
+	flex-wrap: wrap;
+	// Align on the text baseline, not the box centre — native date inputs render
+	// their value slightly low, so centring the boxes leaves the date text
+	// sitting below the "Reserved" and button text. Baseline lines the text up.
+	align-items: baseline;
+	gap: 0.75rem 1.25rem;
+
+	&__check {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0;
+		min-height: 0;
+
+		// govuk absolutely positions its checkbox off-screen behind a large
+		// pseudo-element label; that footprint is far too tall for a list row.
+		.govuk-checkboxes__input {
+			position: static;
+			flex: 0 0 auto;
+			width: 20px;
+			height: 20px;
+			margin: 0;
+			opacity: 1;
+			cursor: pointer;
+		}
+
+		.govuk-checkboxes__label {
+			padding: 0;
+			margin: 0;
+			font-weight: 700;
+			white-space: nowrap; // keep "Reserved" on one line in the narrow cell
+
+			&::before,
+			&::after {
+				content: none;
+			}
+		}
+	}
+
+	&__field {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		gap: 0.5rem;
+
+		.govuk-label {
+			flex: 0 0 auto;
+			margin: 0;
+			font-size: 1rem;
+			line-height: 1;
+		}
+
+		.govuk-input {
+			flex: 1 1 auto;
+			min-width: 0;
+			width: auto;
+			height: 2.25rem;
+			box-sizing: border-box;
+			padding: 0 0.5rem;
+			font-size: 1rem;
+			line-height: 1;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	// Match the inputs' height and centre the label + icon so the whole row of
+	// controls sits on one baseline.
+	&__save {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		height: 2.25rem;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0 0.9rem;
+		font-size: 0.9rem;
+		line-height: 1;
+		white-space: nowrap;
+	}
+
+	&__status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		align-self: center;
+		margin: 0;
+		color: var(--hd-fg-muted);
+	}
+
+	// Small tag marking a site as taken in the read-only (not-yours) state.
+	&__badge {
+		flex: 0 0 auto;
+		padding: 2px 8px;
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: #ffffff;
+		background-color: #4c2c92;
+		border-radius: 3px;
+	}
+}
+
+// The reserve form shares the site footer with the environment links but is far
+// too wide to sit beside them, so it takes a line of its own underneath. The
+// much shorter read-only status does fit inline, pushed to the right of them.
+.website__footer {
+	.hale-dash-reserve {
+		flex: 0 0 100%;
+		margin-top: 0.35rem;
+	}
+
+	.hale-dash-reserve__status,
+	.hale-dash-reserve__unavailable {
+		margin-left: auto;
+		color: var(--hd-fg-muted);
+	}
+
+	.hale-dash-reserve__unavailable {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-style: italic;
+	}
 }
 
 .hale-page h2 {

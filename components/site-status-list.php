@@ -96,9 +96,14 @@ if (
 
 $cached = get_transient($transient_key);
 if ($cached !== false) {
-	echo $cached;
+	echo hale_dash_fill_reserve_placeholders($cached);
 	return;
 }
+
+// Sites are matched to their demo counterpart by slug — the blog IDs differ
+// between environments, and reservations are keyed by the demo one.
+$demo_sites_available = hale_dash_get_demo_sites() !== false;
+$demo_site_ids        = $demo_sites_available ? hale_dash_get_demo_site_ids_by_slug() : [];
 
 ob_start();
 
@@ -253,6 +258,20 @@ foreach ($sites as $site) {
 				}
 				?>
 			</div>
+			<?php
+				$demo_site_id = $demo_site_ids[trim(strtolower($site_path_slug), '/')] ?? 0;
+
+				if ($demo_site_id) {
+					// Marker only — the control itself varies by user, so it is
+					// spliced in after the cache.
+					echo '<!--hd-reserve:' . $demo_site_id . '-->';
+				} elseif ($demo_sites_available && $site_id != $dashboard_ID) {
+					// Say why the controls are missing rather than leaving a gap.
+					// Only safe to claim when the demo list actually loaded — a
+					// failed fetch would otherwise brand every site as absent.
+					echo '<p class="hale-dash-reserve__unavailable govuk-!-margin-0"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Cannot be reserved &mdash; no demo site</p>';
+				}
+			?>
 		</div>
 	</article>
 	<?php if ($warning): ?>
@@ -264,5 +283,12 @@ foreach ($sites as $site) {
 }
 
 $output = ob_get_clean();
-set_transient($transient_key, $output, 5 * MINUTE_IN_SECONDS);
-echo $output;
+
+// The reserve markers are part of the cached markup, so caching a list built
+// while demo was unreachable would strip the controls for everyone until the
+// transient expired. Better to rebuild next request than to persist that.
+if ($demo_sites_available) {
+	set_transient($transient_key, $output, 5 * MINUTE_IN_SECONDS);
+}
+
+echo hale_dash_fill_reserve_placeholders($output);

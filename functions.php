@@ -42,24 +42,35 @@ add_filter('get_theme_mods', function ($mods) {
 	return $mods;
 });
 
+/**
+ * Version an asset by its file modification time so a rebuild always busts the
+ * browser cache. In dev the mix manifest keeps a stable filename with no hash,
+ * so without this a fresh build would keep serving the previously cached CSS.
+ */
+function hale_dash_asset_version($relative_path) {
+	$file = get_theme_file_path('/dist' . $relative_path);
+
+	return file_exists($file) ? filemtime($file) : wp_get_theme()->get('Version');
+}
+
 function hale_dash_enqueue_styles() {
 	wp_enqueue_style( 'hale-dash-style',
 		hale_dash_mix_asset('/css/hale-dash-style.min.css'),
 		array( 'hale-style' ),
-		wp_get_theme()->get( 'Version' )
+		hale_dash_asset_version('/css/hale-dash-style.min.css')
 	);
 
 	wp_enqueue_script( 'hale-dash-dark-mode',
 		get_theme_file_uri() . '/dist/js/dark-mode.js',
 		array(),
-		wp_get_theme()->get( 'Version' ),
+		hale_dash_asset_version('/js/dark-mode.js'),
 		false
 	);
 
 	wp_enqueue_script( 'hale-dash-search',
 		get_theme_file_uri() . '/dist/js/search.js',
 		array(),
-		wp_get_theme()->get( 'Version' ),
+		hale_dash_asset_version('/js/search.js'),
 		true
 	);
 }
@@ -153,6 +164,16 @@ require get_stylesheet_directory() . '/inc/dashboard-metrics.php';
  * All functions needed for the various notification banners we add ie birthday, events etc
  */
 require get_stylesheet_directory() . '/inc/notification-banner.php';
+
+/**
+ * Fetching the demo environment's site list
+ */
+require get_stylesheet_directory() . '/inc/demo-sites.php';
+
+/**
+ * Reserving demo sites from the dashboard site list
+ */
+require get_stylesheet_directory() . '/inc/demo-reservations.php';
 
 function language_warning($code) {
 	if ($code == "cy" || $code == "cy_GB") {
