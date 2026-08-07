@@ -5,11 +5,11 @@
  */
 
 $reservations = hale_dash_get_reservations();
-$site_names   = hale_dash_get_demo_site_names();
+$site_names   = hale_dash_get_local_site_names();
 
-// Reservations live in a local option, so they are still accurate when demo is
-// unreachable — but their names cannot be resolved and the site list will have
-// rendered without reserve controls, which is worth saying out loud.
+// Reservations and their names both come from this network, so the box is fully
+// accurate when demo is unreachable. What is missing in that case is the check
+// against demo, so a site that no longer exists there cannot be pointed out.
 $demo_available = hale_dash_get_demo_sites() !== false;
 
 // Sort by site name so the box reads in the same order as the list below.
@@ -21,7 +21,7 @@ uksort($reservations, function ($a, $b) use ($site_names) {
 	<h3 class="govuk-heading-s govuk-!-margin-bottom-1"><i class="fa-solid fa-calendar-check hale-dash-reserved-box__icon" aria-hidden="true"></i> Currently reserved on demo<?php echo !empty($reservations) ? ' (' . count($reservations) . ')' : ''; ?></h3>
 
 	<?php if (!$demo_available): ?>
-		<p class="hale-dash-reserved-box__warning govuk-body-s"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <span>Demo is not responding. Reservations below are still correct, but site names and the reserve controls will be missing until it is back.</span></p>
+		<p class="hale-dash-reserved-box__warning govuk-body-s"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> <span>Demo is not responding, so sites that are missing from it cannot be flagged right now. Reservations below are unaffected.</span></p>
 	<?php endif; ?>
 
 	<?php if (empty($reservations)): ?>

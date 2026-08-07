@@ -6,8 +6,11 @@
  * Reservations are shared across the whole dashboard rather than private to a
  * user — the point is to let people see which demo sites are already spoken
  * for. They are held in a single option on the dashboard site, keyed by the
- * demo environment's blog ID, because the demo sites themselves are on another
- * install and have no post to hang meta off.
+ * blog ID of the site in this dashboard's own network.
+ *
+ * Keying on the local ID rather than the demo environment's means reserving
+ * works whether or not demo answers. The demo API is only consulted to point out
+ * that a site has no counterpart over there — see components/site-status-list.php.
  */
 
 /**
@@ -27,6 +30,99 @@ function hale_dash_is_production() {
 function hale_dash_environment_name() {
 	return ucfirst(wp_get_environment_type());
 }
+
+/**
+ * blogID => site name for this dashboard's own network, so reservations can be
+ * labelled without asking demo. get_blog_details() is cached per site, so this
+ * costs no queries on a warm cache and needs no switch_to_blog().
+ *
+ * @return array
+ */
+function hale_dash_get_local_site_names() {
+	$names = [];
+
+	foreach (get_sites(['number' => 0]) as $site) {
+		$details = get_blog_details($site->blog_id);
+
+		if ($details) {
+			$names[(int) $site->blog_id] = $details->blogname;
+		}
+	}
+
+	return $names;
+}
+
+/**
+ * slug => blogID for this dashboard's own network. Only the migration below
+ * needs it, which is why it pays for a switch_to_blog() per site rather than
+ * being folded into the site list's existing loop.
+ *
+ * @return array
+ */
+function hale_dash_get_local_site_ids_by_slug() {
+	$ids = [];
+
+	foreach (get_sites(['number' => 0]) as $site) {
+		switch_to_blog($site->blog_id);
+		$slug = trim(strtolower((string) get_option('site_path_slug')), '/');
+		restore_current_blog();
+
+		if ($slug !== '') {
+			$ids[$slug] = (int) $site->blog_id;
+		}
+	}
+
+	return $ids;
+}
+
+/**
+ * Reservations were originally keyed by the site's blog ID on demo, which made
+ * the whole feature depend on demo being reachable. This converts an existing
+ * option to local blog IDs, once, translating through the slug both
+ * environments share.
+ *
+ * Entries with no counterpart in this network are dropped — there would be no
+ * row left to release them from.
+ */
+function hale_dash_migrate_reservation_keys() {
+	if (get_option('hale_dash_reservation_keys_migrated')) {
+		return;
+	}
+
+	$reservations = get_option('hale_dash_demo_reservations', []);
+
+	if (!is_array($reservations) || empty($reservations)) {
+		update_option('hale_dash_reservation_keys_migrated', 1);
+
+		return;
+	}
+
+	$demo_ids_by_slug = hale_dash_get_demo_site_ids_by_slug();
+
+	// Demo unreachable. Leave the option untouched and try again on a later
+	// request rather than discarding reservations we cannot yet translate.
+	if (empty($demo_ids_by_slug)) {
+		return;
+	}
+
+	$slugs_by_demo_id  = array_flip($demo_ids_by_slug);
+	$local_ids_by_slug = hale_dash_get_local_site_ids_by_slug();
+	$migrated          = [];
+
+	foreach ($reservations as $demo_id => $reservation) {
+		$slug     = $slugs_by_demo_id[(int) $demo_id] ?? '';
+		$local_id = $slug !== '' ? ($local_ids_by_slug[$slug] ?? 0) : 0;
+
+		if ($local_id) {
+			$migrated[(string) $local_id] = $reservation;
+		}
+	}
+
+	update_option('hale_dash_demo_reservations', $migrated, false);
+	update_option('hale_dash_reservation_keys_migrated', 1);
+}
+
+add_action('template_redirect', 'hale_dash_migrate_reservation_keys');
 
 /**
  * @return array site_id => ['user_id', 'user_name', 'from', 'to', 'updated']
@@ -125,7 +221,7 @@ function hale_dash_format_reservation_dates($reservation) {
  * Returned rather than echoed because the site list caches its markup and has to
  * splice these in per request — see hale_dash_fill_reserve_placeholders().
  *
- * @param int $site_id blogID of the site on the demo environment.
+ * @param int $site_id blogID of the site in this dashboard's own network.
  */
 function hale_dash_render_reserve_control($site_id) {
 	$reservation = hale_dash_get_reservation($site_id);

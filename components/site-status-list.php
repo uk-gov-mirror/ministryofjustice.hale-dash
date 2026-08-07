@@ -259,17 +259,22 @@ foreach ($sites as $site) {
 				?>
 			</div>
 			<?php
-				$demo_site_id = $demo_site_ids[trim(strtolower($site_path_slug), '/')] ?? 0;
+				$slug_key    = trim(strtolower($site_path_slug), '/');
+				$on_demo     = $slug_key !== '' && isset($demo_site_ids[$slug_key]);
+				$is_dashboard = $site_id == $dashboard_ID;
 
-				if ($demo_site_id) {
-					// Marker only — the control itself varies by user, so it is
-					// spliced in after the cache.
-					echo '<!--hd-reserve:' . $demo_site_id . '-->';
-				} elseif ($demo_sites_available && $site_id != $dashboard_ID) {
-					// Say why the controls are missing rather than leaving a gap.
-					// Only safe to claim when the demo list actually loaded — a
-					// failed fetch would otherwise brand every site as absent.
+				if ($is_dashboard) {
+					// Reserving the dashboard itself is meaningless.
+				} elseif ($demo_sites_available && !$on_demo && $slug_key !== '') {
+					// Only a claim worth making when the demo list actually loaded,
+					// and only for sites that have a slug to be matched on — the
+					// network's main site has none on either side.
 					echo '<p class="hale-dash-reserve__unavailable govuk-!-margin-0"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Cannot be reserved &mdash; no demo site</p>';
+				} else {
+					// Marker only — the control itself varies by user, so it is
+					// spliced in after the cache. Keyed on this network's blog ID,
+					// so it works whether or not demo answered.
+					echo '<!--hd-reserve:' . $site_id . '-->';
 				}
 			?>
 		</div>
@@ -284,11 +289,10 @@ foreach ($sites as $site) {
 
 $output = ob_get_clean();
 
-// The reserve markers are part of the cached markup, so caching a list built
-// while demo was unreachable would strip the controls for everyone until the
-// transient expired. Better to rebuild next request than to persist that.
-if ($demo_sites_available) {
-	set_transient($transient_key, $output, 5 * MINUTE_IN_SECONDS);
-}
+// Cached even when demo was unreachable. The only thing missing in that case is
+// the advisory "no demo site" note — the reserve controls themselves are keyed
+// on local blog IDs and render regardless — so it is not worth losing the cache
+// on the exact requests where something is already slow.
+set_transient($transient_key, $output, 5 * MINUTE_IN_SECONDS);
 
 echo hale_dash_fill_reserve_placeholders($output);

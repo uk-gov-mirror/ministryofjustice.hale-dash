@@ -4,9 +4,13 @@
  * Demo environment site data.
  *
  * get_sites() only ever returns the network of whichever environment the
- * dashboard is running on, so the demo list is pulled from demo's own public
- * hc-rest endpoint. Shared by the site list and the reservations summary, so
- * both render from a single fetch.
+ * dashboard is running on, so demo's own public hc-rest endpoint is the only way
+ * to see what exists over there.
+ *
+ * This is a cross-check, not a source of truth. The dashboard works entirely
+ * from its own network; the demo list is consulted solely to point out sites
+ * that have no counterpart on demo. Nothing here should become load-bearing —
+ * demo goes down, and the dashboard must not go with it.
  */
 
 /**
@@ -109,25 +113,3 @@ function hale_dash_get_demo_site_ids_by_slug() {
 	return $ids;
 }
 
-/**
- * blogID => site name, so reservations can be labelled without a second fetch.
- */
-function hale_dash_get_demo_site_names() {
-	$demo_sites = hale_dash_get_demo_sites();
-
-	if (!is_array($demo_sites)) {
-		return [];
-	}
-
-	$names = [];
-
-	foreach ($demo_sites as $demo_site) {
-		if (!isset($demo_site['blogID'])) {
-			continue;
-		}
-
-		$names[(int) $demo_site['blogID']] = $demo_site['name'] ?? '';
-	}
-
-	return $names;
-}
