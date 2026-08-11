@@ -5,7 +5,14 @@
  */
 
 $reservations = hale_dash_get_reservations();
-$site_names   = hale_dash_get_local_site_names();
+$site_names   = [];
+
+foreach (array_keys($reservations) as $site_id) {
+	$details = get_blog_details((int) $site_id);
+	if ($details) {
+		$site_names[(int) $site_id] = $details->blogname;
+	}
+}
 
 // Reservations and their names both come from this network, so the box is fully
 // accurate when demo is unreachable. What is missing in that case is the check
