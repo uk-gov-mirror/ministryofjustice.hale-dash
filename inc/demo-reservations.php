@@ -99,8 +99,9 @@ function hale_dash_migrate_reservation_keys() {
 
 	$demo_ids_by_slug = hale_dash_get_demo_site_ids_by_slug();
 
-	// Demo unreachable. Leave the option untouched and try again on a later
-	// request rather than discarding reservations we cannot yet translate.
+	// Demo site ID map unavailable (unreachable or missing usable slug/blogID
+	// pairs). Leave the option untouched and try again on a later request rather
+	// than discarding reservations we cannot yet translate.
 	if (empty($demo_ids_by_slug)) {
 		return;
 	}
