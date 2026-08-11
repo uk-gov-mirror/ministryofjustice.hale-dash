@@ -101,8 +101,7 @@ if ($cached !== false) {
 }
 
 // Sites are matched to their demo counterpart by slug — the blog IDs differ
-// between environments, and reservations are keyed by the demo one.
-$demo_sites_available = hale_dash_get_demo_sites() !== false;
+// between environments, and reservations are keyed by this network’s blog ID.
 $demo_site_ids        = $demo_sites_available ? hale_dash_get_demo_site_ids_by_slug() : [];
 
 ob_start();
