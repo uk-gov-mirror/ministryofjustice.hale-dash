@@ -303,6 +303,12 @@ function hale_dash_handle_reserve_site() {
 
 	check_admin_referer('hale_dash_reserve_site_' . $site_id);
 
+	// Ensure the site exists in this network and isn't the dashboard itself.
+	if (!get_blog_details($site_id) || $site_id === get_current_blog_id()) {
+		wp_safe_redirect($redirect);
+		exit;
+	}
+
 	$reservations = hale_dash_get_reservations();
 	$existing     = $reservations[(string) $site_id] ?? null;
 
