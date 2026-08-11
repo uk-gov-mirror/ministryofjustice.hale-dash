@@ -20,21 +20,15 @@ $sites = get_sites();
 		<aside class="govuk-grid-column-one-third hale-dash-metrics-col">
 			<h2 class="govuk-heading-l">Platform metrics</h2>
 			<?php include get_stylesheet_directory() . '/components/feature-metrics.php'; ?>
+			<?php if (!hale_dash_is_production()): ?>
+				<p class="hale-dash-env-notice govuk-body-s">Reservations made on <strong><?php echo esc_html(hale_dash_environment_name()); ?></strong> are stored in this environment only — nobody else will see them. Use the production dashboard to reserve a demo site.</p>
+			<?php endif; ?>
+			<?php include get_stylesheet_directory() . '/components/demo-reservations-summary.php'; ?>
 		</aside>
 
 		<section class="govuk-grid-column-two-thirds hale-dash-sites-col">
 			<h2 class="govuk-heading-l">Sites</h2>
-			<div class="hale-dash-search">
-				<div class="hale-dash-search__field hale-dash-search__field--name">
-					<label class="govuk-label govuk-label--s" for="hd-search-name">Search by name, slug or URL</label>
-					<input class="govuk-input" type="search" id="hd-search-name" placeholder="e.g. 'Law Commission' or 'lawcom'" autocomplete="off">
-				</div>
-				<div class="hale-dash-search__field">
-					<label class="govuk-label govuk-label--s" for="hd-search-id">Search by ID</label>
-					<input class="govuk-input hale-dash-search__id-input" type="search" id="hd-search-id" placeholder="e.g. 42" inputmode="numeric" autocomplete="off">
-				</div>
-				<p class="hale-dash-search__count govuk-body-s govuk-hint" id="hd-search-count" aria-live="polite"></p>
-			</div>
+			<?php include get_stylesheet_directory() . '/components/site-search.php'; ?>
 			<?php include get_stylesheet_directory() . '/components/site-status-list.php'; ?>
 		</section>
 	</div>

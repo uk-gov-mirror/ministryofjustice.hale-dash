@@ -37,6 +37,9 @@ claude/
 node_modules/
 dist/
 
+# Composer
+vendor/
+
 # All plugins
 #
 # Note: If you wish to whitelist plugins,

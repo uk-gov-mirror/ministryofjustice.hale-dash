@@ -96,9 +96,13 @@ if (
 
 $cached = get_transient($transient_key);
 if ($cached !== false) {
-	echo $cached;
+	echo hale_dash_fill_reserve_placeholders($cached);
 	return;
 }
+
+// Sites are matched to their demo counterpart by slug — the blog IDs differ
+// between environments, and reservations are keyed by this network’s blog ID.
+$demo_site_ids        = $demo_sites_available ? hale_dash_get_demo_site_ids_by_slug() : [];
 
 ob_start();
 
@@ -253,6 +257,25 @@ foreach ($sites as $site) {
 				}
 				?>
 			</div>
+			<?php
+				$slug_key    = trim(strtolower($site_path_slug), '/');
+				$on_demo     = $slug_key !== '' && isset($demo_site_ids[$slug_key]);
+				$is_dashboard = $site_id == $dashboard_ID;
+
+				if ($is_dashboard) {
+					// Reserving the dashboard itself is meaningless.
+				} elseif ($demo_sites_available && !$on_demo && $slug_key !== '') {
+					// Only a claim worth making when the demo list actually loaded,
+					// and only for sites that have a slug to be matched on — the
+					// network's main site has none on either side.
+					echo '<p class="hale-dash-reserve__unavailable govuk-!-margin-0"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Cannot be reserved &mdash; no demo site</p>';
+				} else {
+					// Marker only — the control itself varies by user, so it is
+					// spliced in after the cache. Keyed on this network's blog ID,
+					// so it works whether or not demo answered.
+					echo '<!--hd-reserve:' . $site_id . '-->';
+				}
+			?>
 		</div>
 	</article>
 	<?php if ($warning): ?>
@@ -264,5 +287,11 @@ foreach ($sites as $site) {
 }
 
 $output = ob_get_clean();
+
+// Cached even when demo was unreachable. The only thing missing in that case is
+// the advisory "no demo site" note — the reserve controls themselves are keyed
+// on local blog IDs and render regardless — so it is not worth losing the cache
+// on the exact requests where something is already slow.
 set_transient($transient_key, $output, 5 * MINUTE_IN_SECONDS);
-echo $output;
+
+echo hale_dash_fill_reserve_placeholders($output);
