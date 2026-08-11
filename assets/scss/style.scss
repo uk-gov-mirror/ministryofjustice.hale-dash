@@ -909,15 +909,55 @@ html[data-theme="dark"] {
 		}
 	}
 
-	.hale-dash-search {
-		.govuk-input {
-			background-color: var(--hd-bg-subtle) !important;
-			color: var(--hd-fg) !important;
-			border-color: var(--hd-border) !important;
+	// The parent theme paints every form control with its own --input-bg, which
+	// stays light in dark mode while our text colour goes light — white on white.
+	// Covers all controls rather than just the search fields, so anything added
+	// later inherits the fix.
+	.govuk-input,
+	.govuk-select,
+	.govuk-textarea {
+		background-color: var(--hd-bg-subtle) !important;
+		color: var(--hd-fg) !important;
+		border-color: var(--hd-border) !important;
 
-			&::placeholder { color: var(--hd-fg-muted) !important; }
-			&:focus { border-color: var(--hd-link) !important; }
+		&::placeholder { color: var(--hd-fg-muted) !important; }
+		&:focus { border-color: var(--hd-link) !important; }
+	}
+
+	// Buttons come branded from the parent theme's --button vars, which stay
+	// light. Only the two variants this theme actually uses are restyled —
+	// unlike inputs, buttons are meant to differ by role, so a blanket rule
+	// would give a future primary button the wrong colour.
+	.govuk-button--secondary {
+		background-color: var(--hd-bg-subtle) !important;
+		color: var(--hd-fg) !important;
+		border-color: var(--hd-border) !important;
+
+		&:hover {
+			background-color: var(--hd-border) !important;
+			color: var(--hd-fg) !important;
 		}
+	}
+
+	.govuk-button--warning {
+		background-color: #8e1519 !important;
+		color: #ffdcd7 !important;
+		border-color: #8e1519 !important;
+
+		&:hover {
+			background-color: #a81c20 !important;
+			color: #ffffff !important;
+		}
+	}
+
+	// govuk's yellow focus state is an accessibility behaviour, not a theme
+	// colour, and the !important above would otherwise swallow it. Restated here
+	// so focus still reads the same in both themes.
+	.govuk-button:focus:not(:active):not(:hover) {
+		background-color: #ffdd00 !important;
+		border-color: #ffdd00 !important;
+		color: #0b0c0c !important;
+		box-shadow: 0 2px 0 #0b0c0c !important;
 	}
 
 	.hale-dash-metric {
